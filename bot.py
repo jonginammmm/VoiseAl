@@ -4,11 +4,6 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils import executor
-
-
 # ================= CONFIG =================
 API_TOKEN = "8644445513:AAHMYm0GkhFCx2jCGWKwiLhNAwmUaailT1U"
 ELEVEN_API_KEY = "sk_39b547e65c3b5b48ee6f0485e8daeb486ee7e5906f7aaf6b"
