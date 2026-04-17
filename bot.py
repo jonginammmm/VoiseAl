@@ -1,3 +1,4 @@
+import logging
 import telebot
 import sqlite3
 import requests
