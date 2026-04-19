@@ -11,11 +11,12 @@ from aiogram.utils import executor
 # ================= CONFIG =================
 API_TOKEN = "8644445513:AAFp6lAsKvpTGGpw6KY01QhQyGp729aWYIw"
 ELEVEN_API_KEY = "sk_59b3a1586fb9ca5ea49721713f40dd6f0da599a37b6076d3"
-ADMIN_ID = 6394219796  # o'zingni ID
+ADMIN_ID = 6394219796  # o'zingni Telegram ID
+
 FREE_LIMIT = 7
 
 CHANNEL_LINK = "https://t.me/C0META_Uc"
-ADMIN_LINK = "@oybekortiqboyevv"
+ADMIN_LINK = "https://t.me/oybekortiqboyevv"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -23,7 +24,7 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 # ================= DATABASE =================
-conn = sqlite3.connect("bot.db")
+conn = sqlite3.connect("bot.db", check_same_thread=False)
 cursor = conn.cursor()
 
 cursor.execute("""
@@ -38,7 +39,6 @@ CREATE TABLE IF NOT EXISTS users (
     style TEXT
 )
 """)
-
 conn.commit()
 
 # ================= STATE =================
@@ -125,10 +125,10 @@ async def start(msg: types.Message):
     text = f"""
 🚀 <b>PRO VOICE AI BOT</b>
 
-🎧 Matndan real ovoz yarating
-🔥 Eng sifatli AI ovozlar
+🎧 Matndan real ovoz yaratish
+🔥 AI Voice generator
 
-📌 Limit: {FREE_LIMIT} ta / kun
+📌 Free limit: {FREE_LIMIT} / kun
 """
 
     await msg.answer(text, parse_mode="HTML", reply_markup=main_menu())
@@ -139,19 +139,21 @@ async def callbacks(call: types.CallbackQuery):
     uid = call.from_user.id
 
     if call.data == "create":
-        await call.message.edit_text("🎙 KeraklI Ovozni tanlang:", reply_markup=voice_menu())
+        await call.message.edit_text("🎙 Ovozni tanlang:", reply_markup=voice_menu())
 
-    elif call.data == "male":
-        user_state[uid] = {"voice": "male"}
+    elif call.data in ["male", "female"]:
+        if uid not in user_state:
+            user_state[uid] = {}
+
+        user_state[uid]["voice"] = call.data
         await call.message.edit_text("🎨 Stilni tanlang:", reply_markup=style_menu())
 
-    elif call.data == "female":
-        user_state[uid] = {"voice": "female"}
-        await call.message.edit_text("🎨 Stilni tanglang:", reply_markup=style_menu())
+    elif call.data in ["podcast", "meme", "gamer", "romantic"]:
+        if uid not in user_state:
+            user_state[uid] = {}
 
-    elif call.data in ["podcast","meme","gamer","romantic"]:
         user_state[uid]["style"] = call.data
-        await call.message.edit_text("✍️ Marhamat Matn yuboring...")
+        await call.message.edit_text("✍️ Marhamat matn yuboring...")
 
     elif call.data == "profile":
         cursor.execute("SELECT requests, is_premium FROM users WHERE telegram_id=?", (uid,))
@@ -174,8 +176,12 @@ async def generate(msg: types.Message):
         await msg.answer("❗ Avval /start bosing")
         return
 
+    if "voice" not in user_state[uid]:
+        await msg.answer("❗ Ovozni tanlang")
+        return
+
     if not check_limit(uid):
-        await msg.answer("❌ Limitiz tugadi")
+        await msg.answer("❌ Limit tugagan")
         return
 
     text = msg.text
@@ -194,7 +200,11 @@ async def generate(msg: types.Message):
 
     payload = {
         "text": text,
-        "model_id": "eleven_multilingual_v2"
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": {
+            "stability": 0.5,
+            "similarity_boost": 0.75
+        }
     }
 
     try:
@@ -213,10 +223,10 @@ async def generate(msg: types.Message):
             increment_usage(uid)
 
         else:
-            await msg.answer("❌ API Token xato")
+            await msg.answer("❌ ElevenLabs API xatolik")
 
     except Exception as e:
-        await msg.answer("❌ Server xato")
+        await msg.answer("❌ Serverda  xatolik")
 
 # ================= ADMIN =================
 @dp.message_handler(commands=['stat'])
