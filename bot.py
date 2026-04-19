@@ -9,7 +9,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils import executor
 
 # ================= CONFIG =================
-API_TOKEN = "8644445513:AAHMYm0GkhFCx2jCGWKwiLhNAwmUaailT1U"
+API_TOKEN = "8644445513:AAFp6lAsKvpTGGpw6KY01QhQyGp729aWYIw"
 ELEVEN_API_KEY = "sk_59b3a1586fb9ca5ea49721713f40dd6f0da599a37b6076d3"
 ADMIN_ID = 6394219796  # o'zingni ID
 FREE_LIMIT = 7
