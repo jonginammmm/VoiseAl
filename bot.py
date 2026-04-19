@@ -2,6 +2,7 @@ import logging
 import sqlite3
 import requests
 import os
+import time
 from datetime import datetime, timedelta
 
 from aiogram import Bot, Dispatcher, types
@@ -9,14 +10,11 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils import executor
 
 # ================= CONFIG =================
-API_TOKEN = "8644445513:AAFp6lAsKvpTGGpw6KY01QhQyGp729aWYIw"
-ELEVEN_API_KEY = "sk_59b3a1586fb9ca5ea49721713f40dd6f0da599a37b6076d3"
-ADMIN_ID = 6394219796  # o'zingni Telegram ID
+API_TOKEN = os.environ.get("8644445513:AAFp6lAsKvpTGGpw6KY01QhQyGp729aWYIw")
+ELEVEN_API_KEY = os.environ.get("sk_59b3a1586fb9ca5ea49721713f40dd6f0da599a37b6076d3")
+ADMIN_ID = int(os.environ.get("6394219796", "0"))
 
 FREE_LIMIT = 7
-
-CHANNEL_LINK = "https://t.me/C0META_Uc"
-ADMIN_LINK = "https://t.me/oybekortiqboyevv"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -29,14 +27,14 @@ cursor = conn.cursor()
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
-    telegram_id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    telegram_id INTEGER UNIQUE,
     username TEXT,
     created_at TEXT,
     requests INTEGER DEFAULT 0,
-    is_premium INTEGER DEFAULT 0,
     last_request TEXT,
     voice TEXT,
-    style TEXT
+    is_blocked INTEGER DEFAULT 0
 )
 """)
 conn.commit()
@@ -44,55 +42,64 @@ conn.commit()
 # ================= STATE =================
 user_state = {}
 
-# ================= HELPERS =================
+# ================= USER SYSTEM =================
 def register_user(user):
-    cursor.execute("SELECT * FROM users WHERE telegram_id=?", (user.id,))
+    cursor.execute("SELECT telegram_id FROM users WHERE telegram_id=?", (user.id,))
     if not cursor.fetchone():
-        cursor.execute(
-            "INSERT INTO users (telegram_id, username, created_at) VALUES (?, ?, ?)",
-            (user.id, user.username, datetime.now().isoformat())
-        )
+        cursor.execute("""
+        INSERT INTO users (telegram_id, username, created_at)
+        VALUES (?, ?, ?)
+        """, (user.id, user.username, datetime.now().isoformat()))
         conn.commit()
 
-def check_limit(user_id):
-    cursor.execute("SELECT requests, last_request, is_premium FROM users WHERE telegram_id=?", (user_id,))
+def get_user_id(uid):
+    cursor.execute("SELECT id FROM users WHERE telegram_id=?", (uid,))
+    r = cursor.fetchone()
+    return r[0] if r else None
+
+# ================= LIMIT SYSTEM =================
+def check_limit(uid):
+    cursor.execute("SELECT requests, last_request FROM users WHERE telegram_id=?", (uid,))
     row = cursor.fetchone()
 
     if not row:
         return True
 
-    requests_count, last_request, premium = row
+    req, last = row
 
-    if premium:
-        return True
-
-    if last_request:
-        last = datetime.fromisoformat(last_request)
-        if datetime.now() - last > timedelta(days=1):
-            cursor.execute("UPDATE users SET requests=0 WHERE telegram_id=?", (user_id,))
+    if last:
+        last_time = datetime.fromisoformat(last)
+        if datetime.now() - last_time > timedelta(days=1):
+            cursor.execute("UPDATE users SET requests=0 WHERE telegram_id=?", (uid,))
             conn.commit()
             return True
 
-    return requests_count < FREE_LIMIT
+    return req < FREE_LIMIT
 
-def increment_usage(user_id):
+def add_request(uid):
     cursor.execute("""
-    UPDATE users SET requests = requests + 1, last_request=?
-    WHERE telegram_id=?
-    """, (datetime.now().isoformat(), user_id))
+    UPDATE users
+    SET requests = requests + 1,
+        last_request = ?
+    WHERE telegram_id = ?
+    """, (datetime.now().isoformat(), uid))
     conn.commit()
 
-# ================= MENUS =================
+# ================= KEYBOARDS =================
 def main_menu():
     kb = InlineKeyboardMarkup(row_width=2)
     kb.add(
-        InlineKeyboardButton("🎙 Voice yaratish", callback_data="create"),
-        InlineKeyboardButton("📊 Profil", callback_data="profile"),
+        InlineKeyboardButton("🎙 Ovoz", callback_data="voice"),
+        InlineKeyboardButton("👤 Profil", callback_data="profile"),
     )
     kb.add(
-        InlineKeyboardButton("🚀 Kanal", url=CHANNEL_LINK),
-        InlineKeyboardButton("👨‍💻 Admin", url=ADMIN_LINK),
+        InlineKeyboardButton("⚙ Admin", callback_data="admin"),
     )
+    return kb
+
+def back_btn():
+    kb = InlineKeyboardMarkup()
+    kb.add(InlineKeyboardButton("⬅️ Back", callback_data="back"))
     return kb
 
 def voice_menu():
@@ -101,20 +108,20 @@ def voice_menu():
         InlineKeyboardButton("👨 Erkak", callback_data="male"),
         InlineKeyboardButton("👩 Ayol", callback_data="female"),
     )
-    kb.add(InlineKeyboardButton("⬅️ Orqaga", callback_data="back"))
+    kb.add(InlineKeyboardButton("⬅️ Back", callback_data="back"))
     return kb
 
-def style_menu():
+def admin_menu():
     kb = InlineKeyboardMarkup(row_width=2)
     kb.add(
-        InlineKeyboardButton("🎙 Podcast", callback_data="podcast"),
-        InlineKeyboardButton("😂 Meme", callback_data="meme"),
+        InlineKeyboardButton("📊 Statistika", callback_data="stats"),
+        InlineKeyboardButton("👥 Foydalanuvchi", callback_data="users"),
     )
     kb.add(
-        InlineKeyboardButton("🎮 Gamer", callback_data="gamer"),
-        InlineKeyboardButton("❤️ Romantic", callback_data="romantic"),
+        InlineKeyboardButton("📢 Broadcast", callback_data="broadcast"),
+        InlineKeyboardButton("🚫 Ban list", callback_data="banlist"),
     )
-    kb.add(InlineKeyboardButton("⬅️ Orqaga", callback_data="back"))
+    kb.add(InlineKeyboardButton("⬅️ Back", callback_data="back"))
     return kb
 
 # ================= START =================
@@ -122,72 +129,73 @@ def style_menu():
 async def start(msg: types.Message):
     register_user(msg.from_user)
 
-    text = f"""
-🚀 <b>PRO VOICE AI BOT</b>
+    uid = get_user_id(msg.from_user.id)
 
-🎧 Matndan real ovoz yaratish
-🔥 AI Voice generator
+    await msg.answer(
+        f"🚀 VOICE AI BOTga xushkebsz\n\n👤 User ID: {uid}\n🎧 Matndan ovoz yaratish boti☺️",
+        reply_markup=main_menu()
+    )
 
-📌 Free limit: {FREE_LIMIT} / kun
-"""
-
-    await msg.answer(text, parse_mode="HTML", reply_markup=main_menu())
-
-# ================= CALLBACK =================
-@dp.callback_query_handler()
-async def callbacks(call: types.CallbackQuery):
+# ================= CALLBACK ROUTER =================
+@dp.callback_query_handler(lambda c: True)
+async def cb(call: types.CallbackQuery):
     uid = call.from_user.id
 
-    if call.data == "create":
-        await call.message.edit_text("🎙 Ovozni tanlang:", reply_markup=voice_menu())
-
-    elif call.data in ["male", "female"]:
-        if uid not in user_state:
-            user_state[uid] = {}
-
-        user_state[uid]["voice"] = call.data
-        await call.message.edit_text("🎨 Stilni tanlang:", reply_markup=style_menu())
-
-    elif call.data in ["podcast", "meme", "gamer", "romantic"]:
-        if uid not in user_state:
-            user_state[uid] = {}
-
-        user_state[uid]["style"] = call.data
-        await call.message.edit_text("✍️ Marhamat matn yuboring...")
+    # MAIN
+    if call.data == "voice":
+        await call.message.edit_text("🎙 Ovozni tanlang", reply_markup=voice_menu())
 
     elif call.data == "profile":
-        cursor.execute("SELECT requests, is_premium FROM users WHERE telegram_id=?", (uid,))
+        cursor.execute("SELECT requests FROM users WHERE telegram_id=?", (uid,))
         r = cursor.fetchone()
-
         await call.message.edit_text(
-            f"📊 Ishlatilgan: {r[0]}\n💎 Premium: {r[1]}",
+            f"👤 Profil\n\n📊 Requests: {r[0] if r else 0}",
             reply_markup=main_menu()
         )
 
-    elif call.data == "back":
-        await call.message.edit_text("Menu", reply_markup=main_menu())
+    # VOICE
+    elif call.data in ["male", "female"]:
+        user_state[uid] = {"voice": call.data}
+        await call.message.edit_text("✍️ Marhamat matn yuboring", reply_markup=back_btn())
 
-# ================= GENERATE =================
+    # ADMIN
+    elif call.data == "admin":
+        if uid != ADMIN_ID:
+            await call.answer("No access", show_alert=True)
+            return
+        await call.message.edit_text("⚙ Admin Panel", reply_markup=admin_menu())
+
+    elif call.data == "stats":
+        cursor.execute("SELECT COUNT(*) FROM users")
+        users = cursor.fetchone()[0]
+
+        cursor.execute("SELECT SUM(requests) FROM users")
+        req = cursor.fetchone()[0] or 0
+
+        await call.message.edit_text(
+            f"📊 STATS\n\n👥 Users: {users}\n🔁 Requests: {req}",
+            reply_markup=admin_menu()
+        )
+
+    elif call.data == "back":
+        await call.message.edit_text("🏠 Menu", reply_markup=main_menu())
+
+# ================= GENERATE VOICE =================
 @dp.message_handler()
 async def generate(msg: types.Message):
     uid = msg.from_user.id
 
     if uid not in user_state:
-        await msg.answer("❗ Avval /start bosing")
-        return
-
-    if "voice" not in user_state[uid]:
-        await msg.answer("❗ Ovozni tanlang")
+        await msg.answer("❗ Avval Ovozni tanlang")
         return
 
     if not check_limit(uid):
         await msg.answer("❌ Limit tugagan")
         return
 
-    text = msg.text
     voice = user_state[uid]["voice"]
 
-    await msg.answer("🎧 Ovoz tayyorlanmoqda biroz kuting...")
+    await msg.answer("🎧 ..")
 
     voice_id = "21m00Tcm4TlvDq8ikWAM" if voice == "male" else "EXAVITQu4vr4xnSDxMaL"
 
@@ -199,19 +207,19 @@ async def generate(msg: types.Message):
     }
 
     payload = {
-        "text": text,
+        "text": msg.text,
         "model_id": "eleven_multilingual_v2",
         "voice_settings": {
             "stability": 0.5,
-            "similarity_boost": 0.75
+            "similarity_boost": 0.7
         }
     }
 
     try:
-        r = requests.post(url, json=payload, headers=headers)
+        r = requests.post(url, json=payload, headers=headers, timeout=30)
 
         if r.status_code == 200:
-            file = f"{uid}.mp3"
+            file = f"{uid}_{int(time.time())}.mp3"
 
             with open(file, "wb") as f:
                 f.write(r.content)
@@ -220,24 +228,14 @@ async def generate(msg: types.Message):
                 await bot.send_audio(msg.chat.id, f)
 
             os.remove(file)
-            increment_usage(uid)
+
+            add_request(uid)
 
         else:
-            await msg.answer("❌ ElevenLabs API xatolik")
+            await msg.answer("❌ API Xato")
 
-    except Exception as e:
-        await msg.answer("❌ Serverda  xatolik")
-
-# ================= ADMIN =================
-@dp.message_handler(commands=['stat'])
-async def stat(msg: types.Message):
-    if msg.from_user.id != ADMIN_ID:
-        return
-
-    cursor.execute("SELECT COUNT(*) FROM users")
-    users = cursor.fetchone()[0]
-
-    await msg.answer(f"👥 Users: {users}")
+    except Exception:
+        await msg.answer("❌ Serverda xatolik")
 
 # ================= RUN =================
 if __name__ == "__main__":
