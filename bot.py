@@ -10,7 +10,7 @@ from aiogram.utils import executor
 
 # ================= CONFIG =================
 API_TOKEN = "8644445513:AAHMYm0GkhFCx2jCGWKwiLhNAwmUaailT1U"
-ELEVEN_API_KEY = "sk_39b547e65c3b5b48ee6f0485e8daeb486ee7e5906f7aaf6b"
+ELEVEN_API_KEY = "sk_59b3a1586fb9ca5ea49721713f40dd6f0da599a37b6076d3"
 ADMIN_ID = 6394219796
 FREE_LIMIT = 7
 
