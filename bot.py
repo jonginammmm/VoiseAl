@@ -1,9 +1,12 @@
 import logging
-import telebot
 import sqlite3
 import requests
 import os
 from datetime import datetime, timedelta
+
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils import executor
 
 # ================= CONFIG =================
 API_TOKEN = "8644445513:AAHMYm0GkhFCx2jCGWKwiLhNAwmUaailT1U"
@@ -11,12 +14,10 @@ ELEVEN_API_KEY = "sk_39b547e65c3b5b48ee6f0485e8daeb486ee7e5906f7aaf6b"
 ADMIN_ID = 6394219796
 FREE_LIMIT = 7
 
-
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
-
 
 # ================= DATABASE =================
 conn = sqlite3.connect("voisalbot.db")
@@ -45,10 +46,8 @@ CREATE TABLE IF NOT EXISTS logs (
 
 conn.commit()
 
-
 # ================= STATE =================
 user_state = {}
-
 
 # ================= HELPERS =================
 def register_user(user):
@@ -59,7 +58,6 @@ def register_user(user):
             (user.id, user.username, datetime.now().isoformat())
         )
         conn.commit()
-
 
 def check_limit(user_id):
     cursor.execute("SELECT requests, last_request, is_premium FROM users WHERE telegram_id=?", (user_id,))
@@ -82,7 +80,6 @@ def check_limit(user_id):
 
     return requests_count < FREE_LIMIT
 
-
 def increment_usage(user_id):
     cursor.execute("""
         UPDATE users
@@ -92,14 +89,12 @@ def increment_usage(user_id):
     """, (datetime.now().isoformat(), user_id))
     conn.commit()
 
-
 def log_request(user_id, text):
     cursor.execute(
         "INSERT INTO logs (user_id, text, created_at) VALUES (?, ?, ?)",
         (user_id, text, datetime.now().isoformat())
     )
     conn.commit()
-
 
 # ================= KEYBOARDS =================
 def main_menu():
@@ -109,7 +104,6 @@ def main_menu():
     kb.add(InlineKeyboardButton("💎 Premium", callback_data="premium"))
     return kb
 
-
 def voice_menu():
     kb = InlineKeyboardMarkup()
     kb.add(InlineKeyboardButton("👨 Male", callback_data="male"))
@@ -117,23 +111,20 @@ def voice_menu():
     kb.add(InlineKeyboardButton("⬅️ Back", callback_data="back_main"))
     return kb
 
-
 def style_menu():
     kb = InlineKeyboardMarkup()
     kb.add(InlineKeyboardButton("🎙 Podcast", callback_data="podcast"))
     kb.add(InlineKeyboardButton("😂 Meme", callback_data="meme"))
     kb.add(InlineKeyboardButton("🎮 Gamer", callback_data="gamer"))
     kb.add(InlineKeyboardButton("❤️ Romantic", callback_data="romantic"))
-    kb.add(InlineKeyboardButton("⬅️ Back", callback_data="back_voice"))
+    kb.add(InlineKeyboardButton("⬅️ Back", callback_data="back_voice"))  # TUZATILDI
     return kb
-
 
 # ================= START =================
 @dp.message_handler(commands=['start'])
 async def start(msg: types.Message):
     register_user(msg.from_user)
     await msg.answer("🚀 VoisAlBot ishga tushdi!", reply_markup=main_menu())
-
 
 # ================= CALLBACK =================
 @dp.callback_query_handler()
@@ -175,7 +166,6 @@ async def callbacks(call: types.CallbackQuery):
 
     elif call.data == "back_voice":
         await call.message.edit_text("Ovoz tanlang", reply_markup=voice_menu())
-
 
 # ================= TEXT TO VOICE =================
 @dp.message_handler()
@@ -227,7 +217,6 @@ async def generate(msg: types.Message):
 
     else:
         await msg.answer("❌ Xatolik ElevenLabs API")
-
 
 # ================= RUN =================
 if __name__ == "__main__":
