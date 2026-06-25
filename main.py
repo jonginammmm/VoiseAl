@@ -19,11 +19,9 @@ TOKEN = "8644445513:AAFp6lAsKvpTGGpw6KY01QhQyGp729aWYIw"
 
 ADMIN_ID = 6394219796
 
-======================
-
-USER DATA
-
-======================
+# ======================
+# USER DATA
+# ======================
 
 def reset_user(context):
 context.user_data["scene"] = "intro"
