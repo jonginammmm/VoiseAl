@@ -3,7 +3,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 
 TOKEN = "8644445513:AAFp6lAsKvpTGGpw6KY01QhQyGp729aWYIw"
 
-# ---------- START SCREEN ----------
+# ================= START =================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "🌸 Xush kelibsan, gulim...\n\n"
@@ -17,138 +17,161 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
-# ---------- STORY 1 ----------
-async def story1(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+# ================= STORY =================
+async def story1(update, context):
+    q = update.callback_query
+    await q.answer()
 
     text = (
-        "💌 Hayotim, borligim, mehribonim...\n\n"
+        "💌 Hayotim...\n\n"
         "Bu botni sen uchun yaratdim ❤️\n"
-        "Bugun seni hafa qilganimni bilaman...\n"
-        "Nafaqat bugun, oldin ham...\n\n"
-        "Shuning uchun senga 1-2 narsa yozdim...\n"
-        "Buni bilishni xohlaysanmi?"
+        "Buni bilishni hohlisanmi🙃\n"
     )
 
     keyboard = [
-        [InlineKeyboardButton("❤️ Ha, albatta xohlayman", callback_data="yes")],
-        [InlineKeyboardButton("💔 Uncha xohlamayapman", callback_data="no")]
+        [InlineKeyboardButton("❤️ Ha", callback_data="yes")],
+        [InlineKeyboardButton("💔 Yo‘q", callback_data="no")],
+        [InlineKeyboardButton("🔙 Orqaga", callback_data="home")]
     ]
 
-    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+    await q.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
-# ---------- YES PATH ----------
-async def yes_path(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+# ================= YES =================
+async def yes(update, context):
+    q = update.callback_query
+    await q.answer()
+
+    text = "💖 Jonim... sen mendan hafa emasmisan?"
+
+    keyboard = [
+        [InlineKeyboardButton("😊 Ha yoq hafa emasman", callback_data="happy")],
+        [InlineKeyboardButton("😔 Xa Xafaman", callback_data="sad")],
+        [InlineKeyboardButton("🔙 Orqaga", callback_data="start_story")]
+    ]
+
+    await q.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+
+
+# ================= NO =================
+async def no(update, context):
+    q = update.callback_query
+    await q.answer()
 
     text = (
-        "💖 Jonim...\n\n"
-        "Sen mendan hafa emasmisan?"
+        "🌸 Nimadur bo‘ldi gulim?\n"
+        "Kimdir hafa qildimi?"
     )
 
     keyboard = [
-        [InlineKeyboardButton("😊 Ha, hafa emasman", callback_data="happy")],
-        [InlineKeyboardButton("😔 Yo‘q", callback_data="sad")]
+        [InlineKeyboardButton("😔 Ha hafa qilishdi", callback_data="hurt")],
+        [InlineKeyboardButton("🙂 Yo‘q hammasi joyida", callback_data="ok")],
+        [InlineKeyboardButton("🔙 Orqaga", callback_data="start_story")]
     ]
 
-    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+    await q.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
-async def happy(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+# ================= CONTINUE =================
+async def continue_flow(update, context):
+    q = update.callback_query
+    await q.answer()
 
-    await query.edit_message_text(
-        "🌸 Rahmat...\n\n"
-        "Sen meni kechirding ❤️\n"
-        "Men seni juda qadrlayman..."
-    )
+    context.user_data["q"] = 0
+    await show_question(q, context)
 
 
-async def sad(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+# ================= 10 SAVOL =================
+questions = [
+    "1️⃣ Men seni baxtli qilyapmanmi?",
+    "2️⃣ Meni kechira olasanmi?",
+    "3️⃣ Men haqimda fikring qanday?",
+    "4️⃣ Meni sog‘inasanmi?",
+    "5️⃣ Men sen uchun kimman?",
+    "6️⃣ Eng yoqimli xotiramiz qaysi?",
+    "7️⃣ Menga ishonasanmi?",
+    "8️⃣ Men seni tushunamanmi?",
+    "9️⃣ Meni yo‘qotishni xohlaysanmi?",
+    "🔟 Oxirgi savol: meni sevishing rostmi?"
+]
 
-    await query.edit_message_text(
-        "💔 Kechirasan...\n\n"
-        "Men seni xafa qilgan bo‘lsam, uzr...\n"
-        "Yana hammasini tuzataman ❤️"
-    )
 
+# ================= SHOW QUESTION =================
+async def show_question(q, context):
+    i = context.user_data["q"]
 
-# ---------- NO PATH ----------
-async def no_path(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    text = (
-        "🌸 Nima bo‘ldi gulim?\n"
-        "Kimdir hafa qildimi yoki nimadir yoqmadimi?"
-    )
+    if i >= len(questions):
+        await q.edit_message_text(
+            "💖 Rahmat Jonim...\n\nSeni juda qadrlayman ❤️",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🏠 Home", callback_data="home")]
+            ])
+        )
+        return
 
     keyboard = [
-        [InlineKeyboardButton("😔 Ha, hafa qildi", callback_data="hurt")],
-        [InlineKeyboardButton("🙂 Yo‘q, hammasi joyida", callback_data="ok")]
+        [InlineKeyboardButton("❤️ Javob beraman", callback_data="next_q")],
+        [InlineKeyboardButton("🔙 Orqaga", callback_data="ok")]
     ]
 
-    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-
-
-async def hurt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    await query.edit_message_text(
-        "💌 Menga yoz:\n@oybekortiqvoyevv\n\n"
-        "Shu yerga yozsang, hamma darding yengillashadi ❤️"
+    await q.edit_message_text(
+        questions[i],
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 
-async def ok(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+# ================= NEXT QUESTION =================
+async def next_question(update, context):
+    q = update.callback_query
+    await q.answer()
 
-    text = (
-        "🌸 Unda yaxshi...\n"
-        "Demak kayfiyating yaxshi ❤️\n\n"
-        "Davom etamizmi?"
-    )
+    context.user_data["q"] += 1
+    await show_question(q, context)
+
+
+# ================= OTHER =================
+async def happy(update, context):
+    q = update.callback_query
+    await q.answer()
+    await q.edit_message_text("🌸 Rahmat ❤️ Men seni qadrlayman...")
+
+async def sad(update, context):
+    q = update.callback_query
+    await q.answer()
+    await q.edit_message_text("💔 Uzr... seni xafa qilmoqchi emasdim...")
+
+async def hurt(update, context):
+    q = update.callback_query
+    await q.answer()
+    await q.edit_message_text("💌 Menga yoz: @oybekortiqvoyevv ❤️")
+
+async def ok(update, context):
+    q = update.callback_query
+    await q.answer()
 
     keyboard = [
-        [InlineKeyboardButton("💖 Ha, albatta davom etamiz", callback_data="continue")]
+        [InlineKeyboardButton("💖 Boshlash", callback_data="continue")]
     ]
 
-    await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-
-
-# ---------- CONTINUE (10 SAVOL FLOW) ----------
-async def continue_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    context.user_data["q"] = 1
-
-    await query.edit_message_text(
-        "💖 Boshladik...\n\n1-savol:\nMen sen uchin kimman🫣?"
+    await q.edit_message_text(
+        "🌸 Unda yaxshi ❤️ Davom etamizmi?",
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 
-# ---------- ROUTER ----------
+# ================= ROUTER =================
 async def router(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    data = query.data
+    q = update.callback_query
+    data = q.data
 
     if data == "start_story":
         await story1(update, context)
 
     elif data == "yes":
-        await yes_path(update, context)
+        await yes(update, context)
 
     elif data == "no":
-        await no_path(update, context)
+        await no(update, context)
 
     elif data == "happy":
         await happy(update, context)
@@ -165,8 +188,14 @@ async def router(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "continue":
         await continue_flow(update, context)
 
+    elif data == "next_q":
+        await next_question(update, context)
 
-# ---------- RUN ----------
+    elif data == "home":
+        await start(update.callback_query.message, context)
+
+
+# ================= RUN =================
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
