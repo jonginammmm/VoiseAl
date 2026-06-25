@@ -28,11 +28,11 @@ context.user_data["scene"] = "intro"
 context.user_data["question"] = 0
 context.user_data["waiting_text"] = False
 
-======================
+# ======================
 
-SAVOLLAR
+# SAVOLLAR
 
-======================
+# ======================
 
 QUESTIONS = [
 
