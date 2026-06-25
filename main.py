@@ -116,11 +116,9 @@ QUESTIONS = [
 
 ]
 
-======================
-
-START
-
-======================
+# ======================
+# START
+# ======================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -155,11 +153,9 @@ await update.message.reply_text(
     reply_markup=InlineKeyboardMarkup(keyboard)
 )
 
-======================
-
-STORY 1
-
-======================
+# ======================
+# STORY 1
+# ======================
 
 async def story1(query):
 
@@ -205,11 +201,9 @@ await query.edit_message_text(
     reply_markup=InlineKeyboardMarkup(keyboard)
 )
 
-======================
-
-STORY 2
-
-======================
+# ======================
+# STORY 2
+# ======================
 
 async def story2(query):
 
@@ -252,11 +246,9 @@ await query.edit_message_text(
     reply_markup=InlineKeyboardMarkup(keyboard)
 )
 
-======================
-
-STORY 3
-
-======================
+# ======================
+# STORY 3
+# ======================
 
 async def story3(query):
 
@@ -363,11 +355,9 @@ else:
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-======================
-
-NEXT QUESTION
-
-======================
+# ======================
+# NEXT QUESTION
+# ======================
 
 async def next_question(query, context):
 
@@ -378,11 +368,9 @@ await show_question(
     context
 )
 
-======================
-
-INLINE JAVOB
-
-======================
+# ======================
+# INLINE JAVOB
+# ======================
 
 async def answer_question(query, context):
 
@@ -423,11 +411,9 @@ await show_question(
     context
 )
 
-======================
-
-TEXT JAVOB
-
-======================
+# ======================
+# TEXT JAVOB
+# ======================
 
 async def handle_text(update, context):
 
@@ -516,11 +502,9 @@ else:
 
     context.user_data["waiting_text"] = True
 
-======================
-
-FINAL SCENE
-
-======================
+# ======================
+# FINAL SCENE
+# ======================
 
 async def final_scene(query, context):
 
