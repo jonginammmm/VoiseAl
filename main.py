@@ -19,18 +19,22 @@ TOKEN = "8644445513:AAFp6lAsKvpTGGpw6KY01QhQyGp729aWYIw"
 
 ADMIN_ID = 6394219796
 
-# ======================
-# USER DATA
-# ======================
+======================
+
+USER DATA
+
+======================
 
 def reset_user(context):
-    context.user_data["scene"] = "intro"
-    context.user_data["question"] = 0
-    context.user_data["waiting_text"] = False
+context.user_data["scene"] = "intro"
+context.user_data["question"] = 0
+context.user_data["waiting_text"] = False
 
-# ======================
-# SAVOLLAR
-# ======================
+======================
+
+SAVOLLAR
+
+======================
 
 QUESTIONS = [
 
@@ -116,9 +120,11 @@ QUESTIONS = [
 
 ]
 
-# ======================
-# START
-# ======================
+======================
+
+START
+
+======================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -153,9 +159,11 @@ await update.message.reply_text(
     reply_markup=InlineKeyboardMarkup(keyboard)
 )
 
-# ======================
-# STORY 1
-# ======================
+======================
+
+STORY 1
+
+======================
 
 async def story1(query):
 
@@ -201,9 +209,11 @@ await query.edit_message_text(
     reply_markup=InlineKeyboardMarkup(keyboard)
 )
 
-# ======================
-# STORY 2
-# ======================
+======================
+
+STORY 2
+
+======================
 
 async def story2(query):
 
@@ -246,9 +256,11 @@ await query.edit_message_text(
     reply_markup=InlineKeyboardMarkup(keyboard)
 )
 
-# ======================
-# STORY 3
-# ======================
+======================
+
+STORY 3
+
+======================
 
 async def story3(query):
 
@@ -286,254 +298,6 @@ keyboard = [
         )
     ]
 
-]
-
-await query.edit_message_text(
-    text,
-    reply_markup=InlineKeyboardMarkup(keyboard)
-)======================
-
-SHOW QUESTION
-
-======================
-
-async def show_question(query, context):
-
-index = context.user_data["question"]
-
-if index >= len(QUESTIONS):
-    await final_scene(query, context)
-    return
-
-q = QUESTIONS[index]
-
-# TEXT SAVOL
-if q["type"] == "text":
-
-    context.user_data["waiting_text"] = True
-
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                "🔙 Orqaga",
-                callback_data="back_question"
-            )
-        ]
-    ]
-
-    await query.edit_message_text(
-        f"{q['text']}\n\n✍️ Javobni yozib yuboring...",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
-# INLINE SAVOL
-else:
-
-    buttons = []
-
-    for answer in q["answers"]:
-        buttons.append(
-            [
-                InlineKeyboardButton(
-                    answer,
-                    callback_data=f"answer_{index}"
-                )
-            ]
-        )
-
-    buttons.append(
-        [
-            InlineKeyboardButton(
-                "🔙 Orqaga",
-                callback_data="back_question"
-            )
-        ]
-    )
-
-    await query.edit_message_text(
-        q["text"],
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-
-# ======================
-# NEXT QUESTION
-# ======================
-
-async def next_question(query, context):
-
-context.user_data["question"] += 1
-
-await show_question(
-    query,
-    context
-)
-
-# ======================
-# INLINE JAVOB
-# ======================
-
-async def answer_question(query, context):
-
-user = query.from_user
-
-index = context.user_data["question"]
-
-await context.bot.send_message(
-    ADMIN_ID,
-    f"""
-
-❤️ INLINE JAVOB
-
-👤 {user.first_name}
-🆔 {user.id}
-
-📌 Savol:
-{QUESTIONS[index]["text"]}
-
-✅ Javob:
-{query.data}
-"""
-)
-
-await query.edit_message_text(
-    """
-
-💌 Men javobingni qabul qildim...
-
-Rahmat ❤️
-"""
-)
-
-context.user_data["question"] += 1
-
-await show_question(
-    query,
-    context
-)
-
-# ======================
-# TEXT JAVOB
-# ======================
-
-async def handle_text(update, context):
-
-if not context.user_data.get("waiting_text"):
-    return
-
-user = update.effective_user
-
-text = update.message.text
-
-q_index = context.user_data["question"]
-
-await context.bot.send_message(
-    ADMIN_ID,
-    f"""
-
-💌 TEXT JAVOB
-
-👤 {user.first_name}
-🆔 {user.id}
-
-📌 Savol:
-{QUESTIONS[q_index]["text"]}
-
-✍️ Javob:
-{text}
-"""
-)
-
-await update.message.reply_text(
-    """
-
-❤️ Men javobingni qabul qildim...
-
-Rahmat gulim 🌹
-"""
-)
-
-context.user_data["waiting_text"] = False
-
-context.user_data["question"] += 1
-
-# Keyingi savol
-
-q = QUESTIONS[context.user_data["question"]]
-
-if q["type"] == "choice":
-
-    buttons = []
-
-    for answer in q["answers"]:
-
-        buttons.append(
-            [
-                InlineKeyboardButton(
-                    answer,
-                    callback_data=f"answer_{context.user_data['question']}"
-                )
-            ]
-        )
-
-    buttons.append(
-        [
-            InlineKeyboardButton(
-                "🔙 Orqaga",
-                callback_data="back_question"
-            )
-        ]
-    )
-
-    await update.message.reply_text(
-        q["text"],
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-
-else:
-
-    await update.message.reply_text(
-        f"""
-
-{q["text"]}
-
-✍️ Javobni yozib yuboring...
-"""
-)
-
-    context.user_data["waiting_text"] = True
-
-# ======================
-# FINAL SCENE
-# ======================
-
-async def final_scene(query, context):
-
-text = """
-
-🏆 Tabriklayman...
-
-Sen bu kichik sayohatning oxiriga yetding ❤️
-
-🌹 Agar shu yerga qadar yetib kelgan bo‘lsang...
-
-Demak menga biroz vaqtingni ajratding.
-
-Buning uchun rahmat ❤️
-
-💌 Endi esa ichingda menga aytolmagan gaplaring bo‘lsa...
-
-Bemalol yozib qoldir.
-
-Bu xabar faqat Oybekga yetkaziladi ❤️
-"""
-
-keyboard = [
-    [
-        InlineKeyboardButton(
-            "💌 Maxfiy xabar qoldirish",
-            callback_data="secret_message"
-        )
-    ]
 ]
 
 await query.edit_message_text(
