@@ -1,7 +1,7 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-TOKEN = "8644445513:AAFp6lAsKvpTGGpw6KY01QhQyGp729aWYIw"
+TOKEN = "BOT_TOKEN"
 
 # ================= CINEMATIC START =================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
