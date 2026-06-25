@@ -24,14 +24,12 @@ ADMIN_ID = 6394219796
 # ======================
 
 def reset_user(context):
-context.user_data["scene"] = "intro"
-context.user_data["question"] = 0
-context.user_data["waiting_text"] = False
+    context.user_data["scene"] = "intro"
+    context.user_data["question"] = 0
+    context.user_data["waiting_text"] = False
 
 # ======================
-
 # SAVOLLAR
-
 # ======================
 
 QUESTIONS = [
