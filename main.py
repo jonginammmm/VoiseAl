@@ -61,11 +61,9 @@ QUESTIONS = [
 # ======================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    reset_user(context)
 
-reset_user(context)
-
-text = """
-
+    text = """
 🌙 Ba'zi insonlar hayotimizga shunchaki kirib kelmaydi...
 
 Ular qalbimizdan joy oladi.
@@ -78,6 +76,7 @@ Lekin seni sevaman ❤️
 
 💌 Oybekdan Jayronaga
 """
+
 
 keyboard = [
     [
