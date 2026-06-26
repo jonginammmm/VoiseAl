@@ -8,7 +8,7 @@ ContextTypes,
 filters
 )
 
-TOKEN = "8644445513:AAFp6lAsKvpTGGpw6KY01QhQyGp729aWYIw"
+TOKEN = "8644445513:AAHecI2alqhP8KPtcMP5opqVs5zbmGXps5E"
 ADMIN_ID = 6394219796
 
 # ======================
@@ -18,9 +18,9 @@ ADMIN_ID = 6394219796
 # ======================
 
 def reset_user(context):
-context.user_data["scene"] = "intro"
-context.user_data["question"] = 0
-context.user_data["waiting_text"] = False
+    context.user_data["scene"] = "intro"
+    context.user_data["question"] = 0
+    context.user_data["waiting_text"] = False
 
 # ======================
 
