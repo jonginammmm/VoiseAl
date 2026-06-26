@@ -11,22 +11,22 @@ filters
 TOKEN = "8644445513:AAFp6lAsKvpTGGpw6KY01QhQyGp729aWYIw"
 ADMIN_ID = 6394219796
 
-======================
+# ======================
 
-USER DATA
+# USER DATA
 
-======================
+# ======================
 
 def reset_user(context):
 context.user_data["scene"] = "intro"
 context.user_data["question"] = 0
 context.user_data["waiting_text"] = False
 
-======================
+# ======================
 
-SAVOLLAR
+# SAVOLLAR
 
-======================
+# ======================
 
 QUESTIONS = [
 {
@@ -54,11 +54,11 @@ QUESTIONS = [
 }
 ]
 
-======================
+# ======================
 
-START
+# START
 
-======================
+# ======================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -74,7 +74,7 @@ Ular tabassumimizning sababiga aylanadi...
 
 🌹 Balki men mukammal emasdirman...
 
-Lekin seni qadrlayman ❤️
+Lekin seni sevaman ❤️
 
 💌 Oybekdan Jayronaga
 """
@@ -93,11 +93,11 @@ await update.message.reply_text(
     reply_markup=InlineKeyboardMarkup(keyboard)
 )
 
-======================
+# ======================
 
-STORY 1
+# STORY 1
 
-======================
+# ======================
 
 async def story1(query):
 
@@ -140,11 +140,11 @@ await query.edit_message_text(
     reply_markup=InlineKeyboardMarkup(keyboard)
 )
 
-======================
+# ======================
 
-STORY 2
+# STORY 2
 
-======================
+# ======================
 
 async def story2(query):
 
@@ -183,11 +183,11 @@ await query.edit_message_text(
     reply_markup=InlineKeyboardMarkup(keyboard)
 )
 
-======================
+# ======================
 
-STORY 3
+# STORY 3
 
-======================
+# ======================
 
 async def story3(query):
 
